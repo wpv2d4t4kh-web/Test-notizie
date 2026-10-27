@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>ANSA LIVE NEWS - WEATHER STAR 4000 INTERNATIONAL</title>
+  <style>
+    /* Sfondo blu profondo originale WS4000 */
+    body {
+      background-color: #041094;
+      color: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      border: 10px solid #041094;
+    }
+
+    /* Intestazione fissa superiore */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 4px solid #00fbfc; /* Linea ciano classica */
+      padding-bottom: 10px;
+    }
+
+    .title-main {
+      font-size: 36px;
+      color: #ffffff;
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    .clock-display {
+      font-size: 32px;
+      color: #fffb00; /* Giallo neon */
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    /* Contenitore centrale delle notizie */
+    .content-area {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+    }
+
+    .weather-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 3px solid #00fbfc;
+      padding: 35px 55px;
+      border-radius: 4px;
+      display: inline-block;
+      box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+      min-width: 700px;
+      max-width: 950px;
+    }
+
+    .data-row {
+      font-size: 26px;
+      margin: 22px 0;
+      text-align: left;
+      text-shadow: 2px 2px 0px #000;
+      line-height: 1.5;
+    }
+
+    .highlight-yellow {
+      color: #fffb00;
+    }
+
+    /* Footer fisso inferiore */
+    .footer-bar {
+      border-top: 4px solid #00fbfc;
+      padding-top: 10px;
+      text-align: center;
+      font-size: 24px;
+      color: #00fbfc;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    /* Gestione delle pagine visibili/invisibili */
+    .page {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sottofondo Smooth Jazz in loop via link statico permanente -->
+  <audio id="bg-music" src="https://soundhelix.com" autoplay loop></audio>
+
+  <!-- Barra Superiore fissa (Titolo Canale + Orologio) -->
+  <div class="header-bar">
+    <div class="title-main" id="page-title">ANSA LIVE - ULTIME NOTIZIE</div>
+    <div class="clock-display" id="live-clock">00:00:00</div>
+  </div>
+
+  <!-- Area Centrale per la rotazione delle notizie -->
+  <div class="content-area">
+    
+    <!-- BLOCCO NOTIZIE 1 (Prime 3 Notizie) -->
+    <div class="page active" id="news-block-1">
+      <div class="weather-box">
+        <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-1">ANSA AGGIORNAMENTO LIVE</div>
+        <div class="data-row" id="n1">• RETE IN INIZIALIZZAZIONE...</div>
+        <div class="data-row" id="n2">• RICHIESTA AL PROXY INTERNAZIONALE...</div>
+        <div class="data-row" id="n3">• DOWNLOAD FEED RSS IN CORSO...</div>
+      </div>
+    </div>
+
+    <!-- BLOCCO NOTIZIE 2 (Successive 3 Notizie) -->
+    <div class="page" id="news-block-2">
+      <div class="weather-box">
+        <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-2">ANSA AGGIORNAMENTO LIVE</div>
+        <div class="data-row" id="n4">• ESTRATTORE IN CODA DI EMBED...</div>
+        <div class="data-row" id="n5">• OTTIMIZZAZIONE STRINGHE PER SCHERMI CRT...</div>
+        <div class="data-row" id="n6">• ATTESA SINCRONIZZAZIONE PALINSESTO...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Barra Inferiore Fissa -->
+  <div class="footer-bar">
+    REGIA BROADCAST ALL-NEWS NETWORK SYSTEM
+  </div>
+
+  <script>
+    // URL di ANSA e Proxy alternativo iper-compatibile per iPad e OBS
+    const ANSA_RSS_URL = "https://ansa.it";
+    const PROXY_URL = "https://allorigins.win" + encodeURIComponent(ANSA_RSS_URL);
+
+    // Orologio in tempo reale
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').innerText = 
+        String(now.getHours()).padStart(2, '0') + ":" + 
+        String(now.getMinutes()).padStart(2, '0') + ":" + 
+        String(now.getSeconds()).padStart(2, '0');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Funzione di Parsing asincrona riscritta per gestire gli oggetti JSON del nuovo proxy
+    async function scaricaNotizieAnsa() {
+      try {
+        let response = await fetch(PROXY_URL);
+        if (!response.ok) throw new Error("Risposta di rete non valida");
+        let data = await response.json();
+        
+        // AllOrigins restituisce l'XML dentro una stringa chiamata data.contents
+        let parser = new DOMParser();
+        let xmlDoc = parser.parseFromString(data.contents, "application/xml");
+        
+        let items = xmlDoc.querySelectorAll("item");
+        let notizie = [];
+
+        for (let i = 0; i < Math.min(items.length, 6); i++) {
+          let titolo = items[i].querySelector("title").textContent;
+          notizie.push(titolo.toUpperCase()); // Stile testi giganti retro
+        }
+
+        // Riempimento e sblocco immediato delle righe
+        if (notizie[0]) document.getElementById('n1').innerText = "• " + notizie[0];
+        if (notizie[1]) document.getElementById('n2').innerText = "• " + notizie[1];
+        if (notizie[2]) document.getElementById('n3').innerText = "• " + notizie[2];
+        if (notizie[3]) document.getElementById('n4').innerText = "• " + notizie[3];
+        if (notizie[4]) document.getElementById('n5').innerText = "• " + notizie[4];
+        if (notizie[5]) document.getElementById('n6').innerText = "• " + notizie[5];
+
+        document.getElementById('cat-1').innerText = "ANSA ULTIMA ORA - LIVE";
+        document.getElementById('cat-2').innerText = "ANSA ULTIMA ORA - LIVE";
+
+      } catch (errore) {
+        console.log("Errore:", errore);
+        document.getElementById('cat-1').innerText = "ANSA - ERRORE DI SINCRONIZZAZIONE IPAD";
+        // Fallback automatico con dati provvisori in caso di blocco di sicurezza di Safari su iPad
+        document.getElementById('n1').innerText = "• SALA SERVER PRONTA PER RICEVERE HARDWARE DA VALUTARE";
+        document.getElementById('n2').innerText = "• CODICE OTTIMIZZATO: PERFETTO PER LOCALSEND SU PC REGIA";
+        document.getElementById('n3').innerText = "• RETE FISSA DEI NETGEAR PRONTA AD AZZERARE BLOCCHI CORS";
+      }
+    }
+
+    // Esecuzione e timer di aggiornamento automatico dal 5G ogni 5 minuti
+    window.onload = () => {
+      scaricaNotizieAnsa();
+      setInterval(scaricaNotizieAnsa, 300000);
+    };
+
+    // Alternanza automatica delle due schermate notizie a schermo intero ogni 12 secondi
+    const blocco1 = document.getElementById('news-block-1');
+    const blocco2 = document.getElementById('news-block-2');
+    let bloccoAttuale = 1;
+
+    setInterval(() => {
+      if (bloccoAttuale === 1) {
+        blocco1.classList.remove('active');
+        blocco2.classList.add('active');
+        bloccoAttuale = 2;
+      } else {
+        blocco2.classList.remove('active');
+        blocco1.classList.add('active');
+        bloccoAttuale = 1;
+      }
+    }, 12000);
+  </script>
+
+</body>
+</html>
