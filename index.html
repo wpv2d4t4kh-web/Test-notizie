@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Star 4000+ Crotone - Live ANSA News Edition</title>
+  <style>
+    /* Sfondo blu profondo originale WS4000 */
+    body {
+      background-color: #041094;
+      color: #ffffff;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      border: 10px solid #041094;
+    }
+
+    /* Intestazione fissa superiore */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 4px solid #00fbfc; /* Linea ciano classica */
+      padding-bottom: 10px;
+    }
+
+    .title-main {
+      font-size: 36px;
+      color: #ffffff;
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    .clock-display {
+      font-size: 32px;
+      color: #fffb00; /* Giallo neon */
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    /* Contenitore centrale delle notizie */
+    .content-area {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+    }
+
+    .weather-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 3px solid #00fbfc;
+      padding: 35px 55px;
+      border-radius: 4px;
+      display: inline-block;
+      box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+      min-width: 700px;
+      max-width: 950px;
+    }
+
+    .data-row {
+      font-size: 26px;
+      margin: 22px 0;
+      text-align: left;
+      text-shadow: 2px 2px 0px #000;
+      line-height: 1.5;
+    }
+
+    .highlight-yellow {
+      color: #fffb00;
+    }
+
+    /* Footer fisso inferiore */
+    .footer-bar {
+      border-top: 4px solid #00fbfc;
+      padding-top: 10px;
+      text-align: center;
+      font-size: 24px;
+      color: #00fbfc;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    /* Animazione di transizione tra i blocchi notizie */
+    .page {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out forwards;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sottofondo Smooth Jazz in loop via link statico permanente -->
+  <audio id="bg-music" src="https://soundhelix.com" autoplay loop></audio>
+
+  <!-- Barra Superiore fissa (Titolo Canale + Orologio) -->
+  <div class="header-bar">
+    <div class="title-main" id="page-title">ANSA LIVE - ULTIME NOTIZIE</div>
+    <div class="clock-display" id="live-clock">00:00:00</div>
+  </div>
+
+  <!-- Area Centrale per la rotazione delle notizie -->
+  <div class="content-area">
+    
+    <!-- BLOCCO NOTIZIE 1 (Prime 3 Notizie ANSA) -->
+    <div class="page active" id="news-block-1">
+      <div class="weather-box">
+        <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-1">ANSA AGGIORNAMENTO LIVE</div>
+        <div class="data-row" id="n1">• CARICAMENTO RETE IN CORSO...</div>
+        <div class="data-row" id="n2">• CONNESSIONE AI SERVER...</div>
+        <div class="data-row" id="n3">• DOWNLOAD NOTIZIE DALL'ITALIA...</div>
+      </div>
+    </div>
+
+    <!-- BLOCCO NOTIZIE 2 (Successive 3 Notizie ANSA) -->
+    <div class="page" id="news-block-2">
+      <div class="weather-box">
+        <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-2">ANSA AGGIORNAMENTO LIVE</div>
+        <div class="data-row" id="n4">• SCARICAMENTO FLUSSO IN CORSO...</div>
+        <div class="data-row" id="n5">• ELABORAZIONE TESTO IN CORSO...</div>
+        <div class="data-row" id="n6">• AGGIORNAMENTO SCHERMATA...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Barra Inferiore Fissa -->
+  <div class="footer-bar">
+    REGIA BROADCAST ALL-NEWS NETWORK SYSTEM
+  </div>
+
+  <script>
+    // =========================================================================
+    // URL DI ANSA ED ELABORAZIONE PROXY PER EVITARE I BLOCCHI CORS
+    // =========================================================================
+    const ANSA_RSS_URL = "https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml";
+    const PROXY_CORS   = "https://corsproxy.io?";
+
+    // 1. Logica dell'Orologio in tempo reale (Ore, Minuti, Secondi)
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live-clock').innerText = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 2. Lettura e Parsing automatico del Feed RSS di ANSA
+    async function scaricaNotizieAnsa() {
+      try {
+        // Effettua la chiamata passando dal proxy trasparente
+        let response = await fetch(PROXY_CORS + encodeURIComponent(ANSA_RSS_URL));
+        let xmlText = await response.text();
+        
+        // Conversione della stringa di testo in un documento XML DOM interpretabile da JS
+        let parser = new DOMParser();
+        let xmlDoc = parser.parseFromString(xmlText, "application/xml");
+        
+        // Estrazione di tutti gli elementi <item> (le singole notizie)
+        let items = xmlDoc.querySelectorAll("item");
+        let notizie = [];
+
+        // Raccoglie i titoli delle prime 6 notizie disponibili
+        for (let i = 0; i < Math.min(items.length, 6); i++) {
+          let titolo = items[i].querySelector("title").textContent;
+          notizie.push(titolo.toUpperCase()); // Converte in maiuscolo per lo stile retro
+        }
+
+        // Iniezione dinamica dei dati reali dentro le righe dell'HTML
+        if (notizie[0]) document.getElementById('n1').innerText = "• " + notizie[0];
+        if (notizie[1]) document.getElementById('n2').innerText = "• " + notizie[1];
+        if (notizie[2]) document.getElementById('n3').innerText = "• " + notizie[2];
+        if (notizie[3]) document.getElementById('n4').innerText = "• " + notizie[3];
+        if (notizie[4]) document.getElementById('n5').innerText = "• " + notizie[4];
+        if (notizie[5]) document.getElementById('n6').innerText = "• " + notizie[5];
+
+        // Cambia l'intestazione interna per mostrare l'avvenuto aggiornamento live
+        document.getElementById('cat-1').innerText = "ANSA ULTIMA ORA - LIVE";
+        document.getElementById('cat-2').innerText = "ANSA ULTIMA ORA - LIVE";
+
+      } catch (errore) {
+        console.log("Errore nel recupero dei feed RSS ANSA:", errore);
+        document.getElementById('cat-1').innerText = "ANSA - ERRORE REPERIMENTO DATI";
+      }
+    }
+
+    // Avvia lo scaricamento al caricamento iniziale e aggiorna i dati dal 5G ogni 5 minuti
+    window.onload = () => {
+      scaricaNotizieAnsa();
+      setInterval(scaricaNotizieAnsa, 300000); 
+    };
+
+    // 3. Automazione Regia: Alternanza delle due schermate notizie ogni 12 secondi in loop
+    const blocco1 = document.getElementById('news-block-1');
+    const blocco2 = document.getElementById('news-block-2');
+    let bloccoAttuale = 1;
+
+    setInterval(() => {
+      blocco1.classList.remove('active');
+      blocco2.classList.remove('active');
+
+      if (bloccoAttuale === 1) {
+        blocco2.classList.add('active');
+        bloccoAttuale = 2;
+      } else {
+        blocco1.classList.add('active');
+        bloccoAttuale = 1;
+      }
+    }, 12000);
+  </script>
+
+</body>
+</html>
