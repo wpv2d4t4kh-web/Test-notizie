@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Weather Star 4000+ Crotone - Live ANSA News Edition</title>
+  <title>ANSA LIVE NEWS - WEATHER STAR 4000 INTERNATIONAL</title>
   <style>
     /* Sfondo blu profondo originale WS4000 */
     body {
@@ -87,7 +87,7 @@
       text-shadow: 2px 2px 0px #000;
     }
 
-    /* Animazione di transizione tra i blocchi notizie */
+    /* Gestione delle pagine visibili/invisibili */
     .page {
       display: none;
       animation: fadeIn 0.5s ease-in-out forwards;
@@ -117,23 +117,23 @@
   <!-- Area Centrale per la rotazione delle notizie -->
   <div class="content-area">
     
-    <!-- BLOCCO NOTIZIE 1 (Prime 3 Notizie ANSA) -->
+    <!-- BLOCCO NOTIZIE 1 (Prime 3 Notizie) -->
     <div class="page active" id="news-block-1">
       <div class="weather-box">
         <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-1">ANSA AGGIORNAMENTO LIVE</div>
-        <div class="data-row" id="n1">• CARICAMENTO RETE IN CORSO...</div>
-        <div class="data-row" id="n2">• CONNESSIONE AI SERVER...</div>
-        <div class="data-row" id="n3">• DOWNLOAD NOTIZIE DALL'ITALIA...</div>
+        <div class="data-row" id="n1">• RETE IN INIZIALIZZAZIONE...</div>
+        <div class="data-row" id="n2">• RICHIESTA AL PROXY INTERNAZIONALE...</div>
+        <div class="data-row" id="n3">• DOWNLOAD FEED RSS IN CORSO...</div>
       </div>
     </div>
 
-    <!-- BLOCCO NOTIZIE 2 (Successive 3 Notizie ANSA) -->
+    <!-- BLOCCO NOTIZIE 2 (Successive 3 Notizie) -->
     <div class="page" id="news-block-2">
       <div class="weather-box">
         <div class="data-row" style="text-align: center; color: #fffb00; margin-bottom: 25px;" id="cat-2">ANSA AGGIORNAMENTO LIVE</div>
-        <div class="data-row" id="n4">• SCARICAMENTO FLUSSO IN CORSO...</div>
-        <div class="data-row" id="n5">• ELABORAZIONE TESTO IN CORSO...</div>
-        <div class="data-row" id="n6">• AGGIORNAMENTO SCHERMATA...</div>
+        <div class="data-row" id="n4">• ESTRATTORE IN CODA DI EMBED...</div>
+        <div class="data-row" id="n5">• OTTIMIZZAZIONE STRINGHE PER SCHERMI CRT...</div>
+        <div class="data-row" id="n6">• ATTESA SINCRONIZZAZIONE PALINSESTO...</div>
       </div>
     </div>
 
@@ -145,45 +145,41 @@
   </div>
 
   <script>
-    // =========================================================================
-    // URL DI ANSA ED ELABORAZIONE PROXY PER EVITARE I BLOCCHI CORS
-    // =========================================================================
-    const ANSA_RSS_URL = "https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml";
-    const PROXY_CORS   = "https://corsproxy.io?";
+    // URL di ANSA e Proxy alternativo iper-compatibile per iPad e OBS
+    const ANSA_RSS_URL = "https://ansa.it";
+    const PROXY_URL = "https://allorigins.win" + encodeURIComponent(ANSA_RSS_URL);
 
-    // 1. Logica dell'Orologio in tempo reale (Ore, Minuti, Secondi)
+    // Orologio in tempo reale
     function updateClock() {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('live-clock').innerText = `${hours}:${minutes}:${seconds}`;
+      document.getElementById('live-clock').innerText = 
+        String(now.getHours()).padStart(2, '0') + ":" + 
+        String(now.getMinutes()).padStart(2, '0') + ":" + 
+        String(now.getSeconds()).padStart(2, '0');
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 2. Lettura e Parsing automatico del Feed RSS di ANSA
+    // Funzione di Parsing asincrona riscritta per gestire gli oggetti JSON del nuovo proxy
     async function scaricaNotizieAnsa() {
       try {
-        // Effettua la chiamata passando dal proxy trasparente
-        let response = await fetch(PROXY_CORS + encodeURIComponent(ANSA_RSS_URL));
-        let xmlText = await response.text();
+        let response = await fetch(PROXY_URL);
+        if (!response.ok) throw new Error("Risposta di rete non valida");
+        let data = await response.json();
         
-        // Conversione della stringa di testo in un documento XML DOM interpretabile da JS
+        // AllOrigins restituisce l'XML dentro una stringa chiamata data.contents
         let parser = new DOMParser();
-        let xmlDoc = parser.parseFromString(xmlText, "application/xml");
+        let xmlDoc = parser.parseFromString(data.contents, "application/xml");
         
-        // Estrazione di tutti gli elementi <item> (le singole notizie)
         let items = xmlDoc.querySelectorAll("item");
         let notizie = [];
 
-        // Raccoglie i titoli delle prime 6 notizie disponibili
         for (let i = 0; i < Math.min(items.length, 6); i++) {
           let titolo = items[i].querySelector("title").textContent;
-          notizie.push(titolo.toUpperCase()); // Converte in maiuscolo per lo stile retro
+          notizie.push(titolo.toUpperCase()); // Stile testi giganti retro
         }
 
-        // Iniezione dinamica dei dati reali dentro le righe dell'HTML
+        // Riempimento e sblocco immediato delle righe
         if (notizie[0]) document.getElementById('n1').innerText = "• " + notizie[0];
         if (notizie[1]) document.getElementById('n2').innerText = "• " + notizie[1];
         if (notizie[2]) document.getElementById('n3').innerText = "• " + notizie[2];
@@ -191,35 +187,37 @@
         if (notizie[4]) document.getElementById('n5').innerText = "• " + notizie[4];
         if (notizie[5]) document.getElementById('n6').innerText = "• " + notizie[5];
 
-        // Cambia l'intestazione interna per mostrare l'avvenuto aggiornamento live
         document.getElementById('cat-1').innerText = "ANSA ULTIMA ORA - LIVE";
         document.getElementById('cat-2').innerText = "ANSA ULTIMA ORA - LIVE";
 
       } catch (errore) {
-        console.log("Errore nel recupero dei feed RSS ANSA:", errore);
-        document.getElementById('cat-1').innerText = "ANSA - ERRORE REPERIMENTO DATI";
+        console.log("Errore:", errore);
+        document.getElementById('cat-1').innerText = "ANSA - ERRORE DI SINCRONIZZAZIONE IPAD";
+        // Fallback automatico con dati provvisori in caso di blocco di sicurezza di Safari su iPad
+        document.getElementById('n1').innerText = "• SALA SERVER PRONTA PER RICEVERE HARDWARE DA VALUTARE";
+        document.getElementById('n2').innerText = "• CODICE OTTIMIZZATO: PERFETTO PER LOCALSEND SU PC REGIA";
+        document.getElementById('n3').innerText = "• RETE FISSA DEI NETGEAR PRONTA AD AZZERARE BLOCCHI CORS";
       }
     }
 
-    // Avvia lo scaricamento al caricamento iniziale e aggiorna i dati dal 5G ogni 5 minuti
+    // Esecuzione e timer di aggiornamento automatico dal 5G ogni 5 minuti
     window.onload = () => {
       scaricaNotizieAnsa();
-      setInterval(scaricaNotizieAnsa, 300000); 
+      setInterval(scaricaNotizieAnsa, 300000);
     };
 
-    // 3. Automazione Regia: Alternanza delle due schermate notizie ogni 12 secondi in loop
+    // Alternanza automatica delle due schermate notizie a schermo intero ogni 12 secondi
     const blocco1 = document.getElementById('news-block-1');
     const blocco2 = document.getElementById('news-block-2');
     let bloccoAttuale = 1;
 
     setInterval(() => {
-      blocco1.classList.remove('active');
-      blocco2.classList.remove('active');
-
       if (bloccoAttuale === 1) {
+        blocco1.classList.remove('active');
         blocco2.classList.add('active');
         bloccoAttuale = 2;
       } else {
+        blocco2.classList.remove('active');
         blocco1.classList.add('active');
         bloccoAttuale = 1;
       }
