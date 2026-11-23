@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>TG22</title>
+<title>TG22 - Notizie</title>
 <style>
   * {
     box-sizing: border-box;
@@ -79,7 +79,6 @@
     font-size: 22px;
     letter-spacing: 0.5px;
     padding-left: 100%;
-    /* Velocità: aumenta i secondi se ci sono tante notizie */
     animation: scroll-bbc 65s linear infinite;
   }
 
@@ -105,7 +104,7 @@
     <div class="clock-box" id="clock">00:00</div>
     <div class="marquee-container">
       <div class="marquee-text" id="news-ticker">
-        CARICAMENTO NOTIZIE TG22 IN CORSO...
+        TG22 IN DIRETTA SUL CANALE 22 UHF <span class="separator">■</span> AGGIORNAMENTO NOTIZIE IN CORSO...
       </div>
     </div>
   </div>
@@ -121,32 +120,56 @@
   updateClock();
   setInterval(updateClock, 1000);
 
-  // 2. Recupero automatico notizie da Feed RSS (es. ANSA)
+  // 2. Scarica e legge direttamente l'XML del feed RSS
+  async function fetchRSS(feedUrl) {
+    // Usa AllOrigins come ponte CORS diretto per leggere l'XML originale
+    const proxyUrl = `https://allorigins.win{encodeURIComponent(feedUrl)}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error('Errore proxy');
+    
+    const data = await response.json();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+    
+    const items = Array.from(xmlDoc.querySelectorAll("item"));
+    return items.slice(0, 6).map(item => {
+      const titleEl = item.querySelector("title");
+      return titleEl ? titleEl.textContent.trim().toUpperCase() : "";
+    }).filter(t => t.length > 0);
+  }
+
   async function loadNews() {
-    // Puoi sostituire l'URL dopo "rss_url=" con qualsiasi altro feed RSS
-    const rssUrl = encodeURIComponent('https://ansa.it');
-    const apiUrl = `https://rss2json.com{rssUrl}`;
+    const tickerEl = document.getElementById('news-ticker');
+    const feeds = [
+      'https://www.ansa.it/sito/ansait_rss.xml',
+      'https://www.ansa.it/sito/ansait_rss.xml'
+    ];
 
     try {
-      const response = await fetch(apiUrl);
-      const data = await response.json();
+      let allHeadlines = [];
+      for (const feed of feeds) {
+        try {
+          const titles = await fetchRSS(feed);
+          allHeadlines = allHeadlines.concat(titles);
+        } catch (e) {
+          console.warn('Feed saltato:', feed);
+        }
+      }
 
-      if (data.status === 'ok' && data.items.length > 0) {
-        // Prende i primi 8 titoli e li mette in maiuscolo
-        const headlines = data.items.slice(0, 8).map(item => item.title.toUpperCase());
-        const htmlContent = headlines.join(' <span class="separator">■</span> ') + ' <span class="separator">■</span> ';
-        
-        const tickerEl = document.getElementById('news-ticker');
-        tickerEl.innerHTML = htmlContent;
+      if (allHeadlines.length > 0) {
+        const uniqueHeadlines = [...new Set(allHeadlines)];
+        tickerEl.innerHTML = uniqueHeadlines.join(' <span class="separator">■</span> ') + ' <span class="separator">■</span> ';
+      } else {
+        // Fallback se entrambi i proxy sono momentaneamente occupati
+        tickerEl.innerHTML = 'TG22 IN DIRETTA SUL CANALE 22 UHF <span class="separator">■</span> NOTIZIE ITALIA E MONDO <span class="separator">■</span> SPECIALE NATALE IN ONDA DA CROTONE <span class="separator">■</span>';
       }
     } catch (error) {
-      console.error('Errore caricamento notizie:', error);
+      console.error('Errore generale:', error);
     }
   }
 
-  // Carica subito le notizie e le aggiorna ogni 10 minuti (600.000 ms)
   loadNews();
-  setInterval(loadNews, 600000);
+  setInterval(loadNews, 600000); // Aggiorna ogni 10 minuti
 </script>
 
 </body>
