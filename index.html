@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>TG22 - Ticker</title>
+<title>TG22</title>
 <style>
   * {
     box-sizing: border-box;
@@ -79,7 +79,8 @@
     font-size: 22px;
     letter-spacing: 0.5px;
     padding-left: 100%;
-    animation: scroll-bbc 28s linear infinite;
+    /* Velocità: aumenta i secondi se ci sono tante notizie */
+    animation: scroll-bbc 65s linear infinite;
   }
 
   .separator {
@@ -97,24 +98,20 @@
 <body>
 
   <div class="bbc-header">
-    <div class="bbc-badge">TG22 • NOTIZIE</div>
+    <div class="bbc-badge">TG22 • ULTIM'ORA</div>
   </div>
 
   <div class="ticker-wrapper">
     <div class="clock-box" id="clock">00:00</div>
     <div class="marquee-container">
-      <div class="marquee-text">
-        TG22 IN DIRETTA SU TEST
-        <span class="separator">■</span>
-        TEST
-        <span class="separator">■</span>
-        TEST
-        <span class="separator">■</span>
+      <div class="marquee-text" id="news-ticker">
+        CARICAMENTO NOTIZIE TG22 IN CORSO...
       </div>
     </div>
   </div>
 
 <script>
+  // 1. Orologio in tempo reale
   function updateClock() {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -123,6 +120,33 @@
   }
   updateClock();
   setInterval(updateClock, 1000);
+
+  // 2. Recupero automatico notizie da Feed RSS (es. ANSA)
+  async function loadNews() {
+    // Puoi sostituire l'URL dopo "rss_url=" con qualsiasi altro feed RSS
+    const rssUrl = encodeURIComponent('https://ansa.it');
+    const apiUrl = `https://rss2json.com{rssUrl}`;
+
+    try {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data.status === 'ok' && data.items.length > 0) {
+        // Prende i primi 8 titoli e li mette in maiuscolo
+        const headlines = data.items.slice(0, 8).map(item => item.title.toUpperCase());
+        const htmlContent = headlines.join(' <span class="separator">■</span> ') + ' <span class="separator">■</span> ';
+        
+        const tickerEl = document.getElementById('news-ticker');
+        tickerEl.innerHTML = htmlContent;
+      }
+    } catch (error) {
+      console.error('Errore caricamento notizie:', error);
+    }
+  }
+
+  // Carica subito le notizie e le aggiorna ogni 10 minuti (600.000 ms)
+  loadNews();
+  setInterval(loadNews, 600000);
 </script>
 
 </body>
