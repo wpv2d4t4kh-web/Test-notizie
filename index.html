@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
+<title>TG22 - Ticker</title>
 <style>
   * {
     box-sizing: border-box;
@@ -17,11 +18,9 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    /* Margine di sicurezza in basso per evitare il taglio (overscan) del CRT */
     padding-bottom: 28px; 
   }
 
-  /* Barra superiore opzionale con etichetta stile BBC */
   .bbc-header {
     display: flex;
     align-items: center;
@@ -40,7 +39,6 @@
     box-shadow: 2px 2px 4px rgba(0,0,0,0.6);
   }
 
-  /* Barra principale del ticker */
   .ticker-wrapper {
     display: flex;
     align-items: stretch;
@@ -51,7 +49,6 @@
     box-shadow: 0 -2px 8px rgba(0,0,0,0.5);
   }
 
-  /* Riquadro orologio in stile BBC a sinistra */
   .clock-box {
     background-color: #BB1919;
     color: #FFFFFF;
@@ -66,7 +63,6 @@
     flex-shrink: 0;
   }
 
-  /* Contenitore testo scorrevole */
   .marquee-container {
     flex-grow: 1;
     overflow: hidden;
@@ -83,7 +79,6 @@
     font-size: 22px;
     letter-spacing: 0.5px;
     padding-left: 100%;
-    /* Regola '28s' per cambiare la velocità di scorrimento */
     animation: scroll-bbc 28s linear infinite;
   }
 
@@ -102,14 +97,14 @@
 <body>
 
   <div class="bbc-header">
-    <div class="bbc-badge">NEWS • EUROPE</div>
+    <div class="bbc-badge">TG22 • NOTIZIE</div>
   </div>
 
   <div class="ticker-wrapper">
     <div class="clock-box" id="clock">00:00</div>
     <div class="marquee-container">
       <div class="marquee-text">
-        BENVENUTI SU TEST
+        TG22 IN DIRETTA SU TEST
         <span class="separator">■</span>
         TEST
         <span class="separator">■</span>
